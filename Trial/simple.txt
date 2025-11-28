@@ -1,1 +1,130 @@
 this is just a simple text file for testing purposes.
+
+# How to Raise PR to Company Git Repo Using Different Git Accounts
+
+## Scenario:
+- Personal GitHub account: Has GitHub Copilot Premium subscription
+- Company GitHub account: Has access to private company repos but no Copilot Premium
+- VS Code: Logged in with personal account for Copilot benefits
+- Git operations: Need to use company account for company repo access
+
+## Solution: Dual Account Setup
+
+### 1. Configure Git with Multiple Accounts
+
+#### Option A: Use Git Credential Manager
+```bash
+# Set up company account for specific repo
+git config --local user.name "Your Company Name"
+git config --local user.email "your.company.email@company.com"
+
+# For global personal account
+git config --global user.name "Your Personal Name" 
+git config --global user.email "your.personal.email@gmail.com"
+```
+
+#### Option B: Use SSH Keys for Different Accounts
+```bash
+# Generate SSH key for company account
+ssh-keygen -t rsa -b 4096 -C "your.company.email@company.com" -f ~/.ssh/id_rsa_company
+
+# Generate SSH key for personal account  
+ssh-keygen -t rsa -b 4096 -C "your.personal.email@gmail.com" -f ~/.ssh/id_rsa_personal
+
+# Configure SSH config file (~/.ssh/config)
+Host github-company
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa_company
+
+Host github-personal
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa_personal
+```
+
+### 2. VS Code Configuration
+- Keep VS Code logged in with personal account for Copilot benefits
+- Git operations will use the locally configured account (company account)
+- This allows you to:
+  - Use GitHub Copilot Premium features
+  - Push/pull from company repos with proper authentication
+
+### 3. Workflow for Company PRs
+
+#### Step 1: Clone company repo with company credentials
+```bash
+git clone https://github.com/company/repo-name.git
+cd repo-name
+
+# Set company account for this repo
+git config --local user.name "Your Company Name"
+git config --local user.email "your.company.email@company.com"
+```
+
+#### Step 2: Development workflow
+1. Create feature branch: `git checkout -b feature/your-feature`
+2. Make changes using VS Code with Copilot (personal account benefits)
+3. Commit changes: `git commit -m "Your commit message"`
+4. Push with company credentials: `git push origin feature/your-feature`
+
+#### Step 3: Create Pull Request
+1. Go to company GitHub repo in browser
+2. Login with company account
+3. Create PR from your feature branch
+4. Follow company's PR process
+
+### 4. Authentication Methods
+
+#### HTTPS with Credential Manager
+```bash
+# Windows Credential Manager will prompt for company credentials
+git push origin main
+```
+
+#### SSH with specific key
+```bash
+# Using SSH config
+git remote set-url origin git@github-company:company/repo-name.git
+git push origin main
+```
+
+#### Personal Access Token (PAT)
+```bash
+# Generate PAT from company GitHub account
+# Use PAT as password when prompted
+git push origin main
+```
+
+### 5. Troubleshooting
+
+#### Common Issues:
+1. **Permission Denied**: Ensure company account has repo access
+2. **Wrong Author**: Check local git config for the repo
+3. **Authentication Failed**: Verify credentials or SSH keys
+
+#### Verification Commands:
+```bash
+# Check current git config
+git config --list --local
+git config --list --global
+
+# Test SSH connection
+ssh -T git@github-company
+
+# Check remote URL
+git remote -v
+```
+
+### 6. Best Practices
+
+1. **Separate Workspaces**: Consider separate folders for personal vs company projects
+2. **Git Hooks**: Use pre-commit hooks to verify correct account usage
+3. **Environment Variables**: Set repo-specific environment variables if needed
+4. **Credential Isolation**: Use different credential stores for different accounts
+
+### Notes:
+- VS Code GitHub integration uses personal account (for Copilot)
+- Git CLI operations use locally configured account (company account)
+- This setup allows maximum benefit from both accounts
+- Always verify git author before pushing to company repos
